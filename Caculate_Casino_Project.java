@@ -7,7 +7,7 @@ import javax.swing.*;
 
 public class Caculate_Casino_Project extends JFrame {
 
-    private final JTextField display;
+    private JTextField display = null;
     private final JTextField expressionDisplay;
     private final JTextArea historyArea;
     private double result = 0;
@@ -16,6 +16,8 @@ public class Caculate_Casino_Project extends JFrame {
     private final ArrayList<String> history = new ArrayList<>();
     private String firstNumber = "";
     private String operator = "";
+    private JPanel historyPanel;
+    private boolean isHistoryVisible = false;
 
     public Caculate_Casino_Project() {
         // Thiết lập cửa sổ chính
@@ -29,6 +31,32 @@ public class Caculate_Casino_Project extends JFrame {
         JPanel displayPanel = new JPanel(new BorderLayout(0, 0));
         displayPanel.setBackground(Color.BLACK);
 
+        // Panel chứa nút lịch sử và nút xóa
+        JPanel topButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+        topButtonsPanel.setBackground(Color.BLACK);
+
+        
+
+        
+
+        // Thêm hiệu ứng hover cho cả hai nút
+        MouseAdapter hoverEffect = new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                ((JButton)e.getSource()).setBackground(new Color(60, 60, 60));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                ((JButton)e.getSource()).setBackground(new Color(44, 44, 44));
+            }
+        };
+
+        
+
+        // Thêm các nút vào panel
+        
+
         // Màn hình hiển thị biểu thức
         expressionDisplay = new JTextField("");
         expressionDisplay.setHorizontalAlignment(JTextField.RIGHT);
@@ -38,7 +66,6 @@ public class Caculate_Casino_Project extends JFrame {
         expressionDisplay.setBackground(Color.BLACK);
         expressionDisplay.setForeground(Color.GRAY);
         expressionDisplay.setBorder(null);
-        displayPanel.add(expressionDisplay, BorderLayout.NORTH);
 
         // Màn hình hiển thị số
         display = new JTextField("0");
@@ -49,7 +76,16 @@ public class Caculate_Casino_Project extends JFrame {
         display.setBackground(Color.BLACK);
         display.setForeground(Color.WHITE);
         display.setBorder(null);
-        displayPanel.add(display, BorderLayout.CENTER);
+
+        // Panel chứa màn hình và biểu thức
+        JPanel screenPanel = new JPanel(new BorderLayout(0, 0));
+        screenPanel.setBackground(Color.BLACK);
+        screenPanel.add(expressionDisplay, BorderLayout.NORTH);
+        screenPanel.add(display, BorderLayout.CENTER);
+
+        // Thêm các panel vào displayPanel theo thứ tự mới
+        displayPanel.add(screenPanel, BorderLayout.CENTER);  // Màn hình ở giữa
+        displayPanel.add(topButtonsPanel, BorderLayout.SOUTH);  // Các nút ở dưới màn hình
 
         add(displayPanel, BorderLayout.NORTH);
 
@@ -67,67 +103,77 @@ public class Caculate_Casino_Project extends JFrame {
         scrollPane.setPreferredSize(new Dimension(400, 40));
         scrollPane.setBorder(null);
         scrollPane.setBackground(Color.BLACK);
-        add(scrollPane, BorderLayout.CENTER);
+
+        // Tạo panel lịch sử (ẩn ban đầu)
+        historyPanel = new JPanel(new BorderLayout());
+        historyPanel.setBackground(Color.BLACK);
+        historyPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        historyPanel.add(scrollPane, BorderLayout.CENTER);
+        historyPanel.setVisible(false);
+
+        // Thêm panel lịch sử vào frame
+        add(historyPanel, BorderLayout.CENTER);
 
         // Panel chứa các nút
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(5, 4, 1, 1));
+        buttonPanel.setLayout(new GridLayout(6, 4, 1, 1));
         buttonPanel.setBackground(Color.BLACK);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
 
-        // Thay đổi mảng buttonLabels để thêm nút backspace (←) thay vì dấu chấm
+        // Thay đổi mảng buttonLabels
         String[] buttonLabels = {
+            "⋯", "", "", "⋯",      // Hàng cho nút lịch sử và nút xóa số
             "C", "^", "%", "÷",
             "7", "8", "9", "×",
             "4", "5", "6", "-",
             "1", "2", "3", "+",
-            "0", "←", "√", "="
+            "0", ".", "←", "="
         };
 
         for (String label : buttonLabels) {
-            RoundedButton button = new RoundedButton(label);
-            button.setFont(new Font("Arial", Font.BOLD, 28));
-            button.setPreferredSize(new Dimension(90, 90));
+            if (!label.isEmpty()) {
+                RoundedButton button = new RoundedButton(label);
+                button.setFont(new Font("Arial", Font.BOLD, 28));
+                button.setPreferredSize(new Dimension(90, 90));
 
-            if (label.matches("[0-9]")) {
-                button.setBackground(new Color(51, 51, 51));
-                button.setForeground(Color.WHITE);
-            } else if (label.matches("[+\\-×÷]") || label.equals("=")) {
-                button.setBackground(new Color(255, 149, 0));
-                button.setForeground(Color.WHITE);
+                // Phần style cho các nút
+                if (label.equals("⋯")) {
+                    button.setBackground(new Color(44, 44, 44));
+                    button.setForeground(new Color(200, 200, 200));
+                    
+                    // Sử dụng biến đếm để xác định nút đầu tiên hay thứ hai
+                    int componentCount = buttonPanel.getComponentCount();
+                    if (componentCount == 0) {  // Nút đầu tiên là nút lịch sử
+                        button.addActionListener(e -> toggleHistory());
+                    } else if (componentCount == 1) {  // Nút thứ hai là nút xóa số
+                        button.addActionListener(e -> {
+                            String currentText = display.getText();
+                            if (currentText.length() > 0) {
+                                String newText = currentText.substring(0, currentText.length() - 1);
+                                display.setText(newText.isEmpty() ? "0" : newText);
+                            }
+                        });
+                    }
+                } else if (label.matches("[0-9]")) {
+                    button.setBackground(new Color(51, 51, 51));
+                    button.setForeground(Color.WHITE);
+                    button.addActionListener(new ButtonClickListener());
+                } else if (label.matches("[+\\-×÷]") || label.equals("=")) {
+                    button.setBackground(new Color(255, 149, 0));
+                    button.setForeground(Color.WHITE);
+                    button.addActionListener(new ButtonClickListener());
+                } else {
+                    button.setBackground(new Color(165, 165, 165));
+                    button.setForeground(Color.BLACK);
+                    button.addActionListener(new ButtonClickListener());
+                }
+
+                buttonPanel.add(button);
             } else {
-                button.setBackground(new Color(165, 165, 165));
-                button.setForeground(Color.BLACK);
+                JPanel emptyPanel = new JPanel();
+                emptyPanel.setBackground(Color.BLACK);
+                buttonPanel.add(emptyPanel);
             }
-
-            buttonPanel.add(button);
-
-            // Thêm hiệu ứng hover
-            button.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    if (button.getBackground().equals(new Color(51, 51, 51))) {
-                        button.setBackground(new Color(80, 80, 80));
-                    } else if (button.getBackground().equals(new Color(255, 149, 0))) {
-                        button.setBackground(new Color(255, 170, 50));
-                    } else {
-                        button.setBackground(new Color(190, 190, 190));
-                    }
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    if (button.getBackground().equals(new Color(80, 80, 80))) {
-                        button.setBackground(new Color(51, 51, 51));
-                    } else if (button.getBackground().equals(new Color(255, 170, 50))) {
-                        button.setBackground(new Color(255, 149, 0));
-                    } else {
-                        button.setBackground(new Color(165, 165, 165));
-                    }
-                }
-            });
-
-            button.addActionListener(new ButtonClickListener());
         }
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -148,6 +194,15 @@ public class Caculate_Casino_Project extends JFrame {
                 if (currentText.length() > 0) {
                     String newText = currentText.substring(0, currentText.length() - 1);
                     display.setText(newText.isEmpty() ? "0" : newText);
+                }
+                return;
+            }
+
+            if (command.equals(".")) {
+                String currentText = display.getText();
+                // Kiểm tra xem số hiện tại đã có dấu chấm chưa
+                if (!currentText.contains(".")) {
+                    display.setText(currentText + ".");
                 }
                 return;
             }
@@ -305,6 +360,14 @@ public class Caculate_Casino_Project extends JFrame {
                 ((JButton) c).setFont(new Font("Arial", Font.BOLD, buttonFontSize));
             }
         }
+    }
+
+    // Thêm phương thức để toggle hiển thị lịch sử
+    private void toggleHistory() {
+        isHistoryVisible = !isHistoryVisible;
+        historyPanel.setVisible(isHistoryVisible);
+        pack(); // Điều chỉnh kích thước frame
+        setSize(400, isHistoryVisible ? 800 : 700); // Điều chỉnh chiều cao frame
     }
 
     class RoundedButton extends JButton {
