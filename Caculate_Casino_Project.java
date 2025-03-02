@@ -186,7 +186,7 @@ public class Caculate_Casino_Project extends JFrame {
             } else if (command.equals("=")) {
                 if (!firstNumber.isEmpty() && !operator.isEmpty()) {
                     String secondNumber = display.getText();
-                    if (secondNumber.isEmpty() || secondNumber.equals("0")) {
+                    if (start || secondNumber.isEmpty() || secondNumber.equals("0")) {
                         display.setText("syntax error");
                         expressionDisplay.setText("");
                         return;
