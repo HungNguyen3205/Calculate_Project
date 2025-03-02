@@ -1,4 +1,3 @@
-
 package caculate_casino_project;
 
 import java.awt.*;
@@ -187,6 +186,12 @@ public class Caculate_Casino_Project extends JFrame {
             } else if (command.equals("=")) {
                 if (!firstNumber.isEmpty() && !operator.isEmpty()) {
                     String secondNumber = display.getText();
+                    if (secondNumber.isEmpty() || secondNumber.equals("0")) {
+                        display.setText("syntax error");
+                        expressionDisplay.setText("");
+                        return;
+                    }
+                    
                     String expression = firstNumber + " " + operator + " " + secondNumber;
                     calculateResult();
                     expressionDisplay.setText(expression + " =");
@@ -213,20 +218,24 @@ public class Caculate_Casino_Project extends JFrame {
                 }
                 start = true;
             } else { // Các phép toán (+, -, ×, ÷, %)
-                if (!display.getText().isEmpty()) {
-                    firstNumber = display.getText();
-                    operator = command;
-                    expressionDisplay.setText(firstNumber + " " + operator);
-                    start = true;
-                    isResult = false;
+                if (display.getText().isEmpty() || display.getText().equals("0")) {
+                    display.setText("syntax error");
+                    expressionDisplay.setText("");
+                    return;
                 }
+                firstNumber = display.getText();
+                operator = command;
+                expressionDisplay.setText(firstNumber + " " + operator);
+                start = true;
+                isResult = false;
             }
         }
     }
 
     private void calculateResult() {
         try {
-            if (firstNumber.isEmpty()) {
+            if (firstNumber.isEmpty() || display.getText().isEmpty()) {
+                display.setText("syntax error");
                 return;
             }
 
@@ -258,10 +267,14 @@ public class Caculate_Casino_Project extends JFrame {
                     break;
             }
 
-            display.setText(String.valueOf(result));
+            if (result == (long) result) {
+                display.setText(String.format("%d", (long) result));
+            } else {
+                display.setText(String.valueOf(result));
+            }
 
         } catch (NumberFormatException e) {
-            display.setText("Error");
+            display.setText("syntax error");
         }
     }
 
